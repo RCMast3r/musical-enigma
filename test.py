@@ -3,6 +3,7 @@ import time
 import random
 import serial
 import time
+from pygame import mixer
 
 # Configuration
 PORT = "/dev/ttyACM0"  # Replace with your ESP32-C3's serial port
@@ -10,9 +11,17 @@ BAUDRATE = 115200
 
 # Define home row keys and their positions on the grid
 home_row_keys = ['Q', 'W', 'E', 'R', 'V']
+# Reminder of what the note being played is. These notes go 1-1 with the keys
+home_row_notes = ['A', 'B', 'C', 'D', 'F']
 key_widgets = {}
 target_key = None
-reaction_time = 50  # max reaction time in ms 
+reaction_time = 50  # max reaction time in ms
+mixer.init()
+
+
+def play_sound(note):
+    mixer.music.load(f"notes/{note}.wav")
+    mixer.music.play()
 
 def send_key_command(target_key):
     """
@@ -43,6 +52,7 @@ def check_key_press(event):
     # print("key target: ",target_key)
     if event.keysym.upper() == target_key or ((target_key==';') and (event.keysym.upper()=='SEMICOLON')):
         elapsed_time = (time.time() - start_time) * reaction_time  # in ms
+        play_sound(target_key)
         if elapsed_time <= reaction_time:
             key_widgets[target_key].config(bg="green")
         else:
