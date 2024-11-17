@@ -12,11 +12,30 @@ BAUDRATE = 115200
 # Define home row keys and their positions on the grid
 home_row_keys = ['Q', 'W', 'E', 'R', 'V']
 # Reminder of what the note being played is. These notes go 1-1 with the keys
-home_row_notes = ['A', 'B', 'C', 'D', 'F']
+home_row_notes = ['C', 'D', 'E', 'F', 'G']
 key_widgets = {}
 target_key = None
 reaction_time = 50  # max reaction time in ms
+# Init Audio
 mixer.init()
+# Twinkle Twinkle Little Star
+song_sequence = [
+    'Q', 'Q', 'R', 'R', 'V', 'V', 'R',  # C C G G A A G
+    'W', 'W', 'E', 'E', 'W', 'W', 'Q',  # F F E E D D C
+    'R', 'R', 'W', 'W', 'E', 'E', 'W',  # G G F F E E D
+    'R', 'R', 'W', 'W', 'E', 'E', 'W',  # G G F F E E D
+    'Q', 'Q', 'R', 'R', 'V', 'V', 'R',  # C C G G A A G
+    'W', 'W', 'E', 'E', 'W', 'W', 'Q'   # F F E E D D C
+]
+
+note_durations = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0,  # "Twinkle Twinkle Little Star"
+                  0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0,  # "How I wonder what you are"
+                  0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0,  # "Twinkle Twinkle Little Star"
+                  0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0,  # "How I wonder what you are"
+                  0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0,  # "Twinkle Twinkle Little Star"
+                  0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0]  # "How I wonder what you are"
+
+current_note_index = 0  # Index to track the current note in the sequence
 
 
 def play_sound(note):
@@ -62,24 +81,27 @@ def check_key_press(event):
     
 # Function to reset the target key's color after a short delay
 def reset_key():
-    global target_key
+    global target_key, current_note_index
     if target_key is None:
         return
     # Capture the current target key to ensure it doesn't change during the delay
     current_key = target_key
     key_widgets[current_key].after(reaction_time, lambda: key_widgets[current_key].config(bg="lightgray"))
     target_key = None
-    root.after(reaction_time, display_key)  # Show a new key after a delay
+    duration = note_durations[current_note_index - 1] * 1000
+    root.after(int(duration), display_key)  # Show a new key after a delay
 
 # Function to randomly highlight a key
 def display_key():
-    global target_key, start_time
+    global target_key, start_time, current_note_index
     if target_key is None:
-        target_key = random.choice(home_row_keys)
+        target_key = song_sequence[current_note_index]
         key_widgets[target_key].config(bg="red")
         resp = send_key_command(target_key)
         # print(resp)
         start_time = time.time()  # Record the time when the key is highlighted
+        current_note_index = (current_note_index + 1) % len(song_sequence)
+
 
 # Initialize the Tkinter GUI
 root = tk.Tk()
